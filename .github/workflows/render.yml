@@ -15,21 +15,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-- name: Install Blender and dependencies
-  run: |
-    sudo apt-get update
-    sudo apt-get install -y \
-      blender \
-      ffmpeg \
-      libegl1 \
-      libgl1 \
-      libgles2 \
-      libx11-6 \
-      libxext6 \
-      libxfixes3 \
-      libxi6 \
-      libxrender1 \
-      libxkbcommon0
+      - name: Install Blender and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            blender \
+            ffmpeg \
+            libegl1 \
+            libgl1 \
+            libgles2 \
+            libx11-6 \
+            libxext6 \
+            libxfixes3 \
+            libxi6 \
+            libxrender1 \
+            libxkbcommon0
 
       - name: Show hardware
         run: |
@@ -50,6 +50,10 @@ jobs:
           mkdir -p output
           mkdir -p /home/runner/work/render_frames
 
+      - name: Test Blender
+        run: |
+          blender --background --version
+
       - name: Render video
         run: |
           blender -b \
@@ -65,8 +69,10 @@ jobs:
             exit 1
           fi
 
+          echo "===== VIDEO ====="
           ls -lh /home/runner/work/rendered_video.mp4
 
+          echo "===== VIDEO INFO ====="
           ffprobe \
             -v error \
             -show_entries format=duration,size \
@@ -79,6 +85,7 @@ jobs:
             /home/runner/work/rendered_video.mp4 \
             output/final_video.mp4
 
+          echo "Final video:"
           ls -lh output/final_video.mp4
 
       - name: Upload final video
