@@ -22,25 +22,52 @@ jobs:
 
       - name: Show hardware
         run: |
-          echo "CPU:"
+          echo "===== CPU ====="
           nproc
-          echo "Memory:"
+
+          echo "===== MEMORY ====="
           free -h
+
+          echo "===== BLENDER ====="
           blender --version
+
+          echo "===== FFMPEG ====="
           ffmpeg -version | head -1
+
+      - name: Create output directory
+        run: |
+          mkdir -p output
+          mkdir -p /home/runner/work/render_frames
 
       - name: Render video
         run: |
-          mkdir -p output
-          blender -b -E BLENDER_EEVEE_NEXT \
+          blender -b \
             --python render.py \
             -- \
             --output /home/runner/work/rendered_video.mp4 \
             --frames 1-120
 
+      - name: Check rendered video
+        run: |
+          if [ ! -f "/home/runner/work/rendered_video.mp4" ]; then
+            echo "ERROR: Rendered video was not created."
+            exit 1
+          fi
+
+          ls -lh /home/runner/work/rendered_video.mp4
+
+          ffprobe \
+            -v error \
+            -show_entries format=duration,size \
+            -of default=noprint_wrappers=1 \
+            /home/runner/work/rendered_video.mp4
+
       - name: Move final video
         run: |
-          cp /home/runner/work/rendered_video.mp4 output/final_video.mp4
+          cp \
+            /home/runner/work/rendered_video.mp4 \
+            output/final_video.mp4
+
           ls -lh output/final_video.mp4
 
       - name: Upload final video
