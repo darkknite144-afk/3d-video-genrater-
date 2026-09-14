@@ -1,0 +1,51 @@
+name: Low-Poly 3D Video Render
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender ffmpeg
+
+      - name: Show hardware
+        run: |
+          echo "CPU:"
+          nproc
+          echo "Memory:"
+          free -h
+          blender --version
+          ffmpeg -version | head -1
+
+      - name: Render video
+        run: |
+          mkdir -p output
+          blender -b -E BLENDER_EEVEE_NEXT \
+            --python render.py \
+            -- \
+            --output /home/runner/work/rendered_video.mp4 \
+            --frames 1-120
+
+      - name: Move final video
+        run: |
+          cp /home/runner/work/rendered_video.mp4 output/final_video.mp4
+          ls -lh output/final_video.mp4
+
+      - name: Upload final video
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-low-poly-video
+          path: output/final_video.mp4
+          retention-days: 7
